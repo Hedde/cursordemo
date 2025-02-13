@@ -21,50 +21,28 @@ defmodule CursorDemoWeb.Router do
     plug :ensure_authenticated
   end
 
-  # Health check route - no auth required
-  scope "/", CursorDemoWeb do
-    get "/health", HealthController, :index
-  end
-
   # Public routes
   scope "/", CursorDemoWeb do
-    pipe_through :browser
+    pipe_through [:browser, :redirect_if_authenticated]
 
-    get "/", PageController, :home
-  end
-
-  # Authentication routes
-  scope "/", CursorDemoWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
-
-    live_session :redirect_if_user_is_authenticated,
-      on_mount: [{CursorDemoWeb.UserAuth, :redirect_if_user_is_authenticated}] do
-      live "/users/register", UserRegistrationLive, :new
-      live "/users/log_in", UserLoginLive, :new
-      live "/users/reset_password", UserForgotPasswordLive, :new
-      live "/users/reset_password/:token", UserResetPasswordLive, :edit
-    end
-
-    post "/users/log_in", UserSessionController, :create
+    live "/register", UserRegistrationLive
+    post "/register", UserRegistrationController, :create
+    get "/login", UserSessionController, :new
+    post "/login", UserSessionController, :create
+    get "/confirm/:token", UserRegistrationController, :confirm
   end
 
   # Protected routes
   scope "/", CursorDemoWeb do
     pipe_through [:browser, :require_authenticated_user]
 
-    live_session :require_authenticated_user,
-      on_mount: [{CursorDemoWeb.UserAuth, :ensure_authenticated}] do
-      live "/users/settings", UserSettingsLive, :edit
-      live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
-    end
-  end
-
-  scope "/", CursorDemoWeb do
-    pipe_through [:browser]
-
-    delete "/users/log_out", UserSessionController, :delete
-    live "/users/confirm/:token", UserConfirmationLive, :edit
-    live "/users/confirm", UserConfirmationInstructionsLive, :new
+    live "/", LandingLive
+    live "/posts/:id", PostDetailLive
+    live "/settings", SettingsLive
+    delete "/logout", UserSessionController, :delete
+    live "/:username", UserDetailLive
+    live "/:username/following", UserFollowingLive
+    live "/:username/followers", UserFollowersLive
   end
 
   # Other scopes may use custom stacks.
