@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+echo "Starting migration script..."
+
+RELEASE_NAME="${RELEASE_NAME:-"cursor_demo"}"
+RELEASE_VSN="${RELEASE_VSN:-"$(cut -d' ' -f2 "$RELEASE_ROOT/releases/start_erl.data")"}"
+
+export RELEASE_COOKIE="${RELEASE_COOKIE:-"$(cat "$RELEASE_ROOT/releases/COOKIE")"}"
+export RELEASE_NODE="${RELEASE_NODE:-"$RELEASE_NAME@127.0.0.1"}"
+export RELEASE_DISTRIBUTION=name
+export ELIXIR_ERL_OPTIONS="-kernel inet_dist_listen_min 9100 inet_dist_listen_max 9155"
+
+echo "Running migrations for $RELEASE_NAME $RELEASE_VSN..."
+"$RELEASE_ROOT/bin/$RELEASE_NAME" eval 'CursorDemo.Release.migrate()'
+
+echo "Migration complete!" 

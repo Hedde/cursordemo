@@ -14,6 +14,8 @@ processes = []
 [env]
   PHX_HOST = "cursor-demo.fly.dev"
   PORT = "8080"
+  DATABASE_URL = "ecto://postgres:postgres@cursor-demo-db.internal:5432/cursor_demo_dev"
+  RELEASE_COOKIE = "development_cookie"  # Simple dev cookie
 
 [experimental]
   auto_rollback = true
