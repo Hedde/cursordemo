@@ -1,0 +1,93 @@
+---
+description: 
+globs: 
+---
+@rule
+Title: Testing Guidelines
+Priority: Medium
+Tags: [testing, guidelines, structure, performance, async]
+
+---
+
+## 1. Structure & Organization
+
+- **Folder Layout:**
+  - `test/kantine_koning/`: Business logic tests (unit, integration, PubSub).
+  - `test/kantine_koning_web/`: Web tests (features, live).
+  - `support/`: Test support files.
+- Map tests to implementation folders for easier traceability.
+
+---
+
+## 2. Test Execution
+
+- **Full Suite Command:**
+  ```bash
+  docker compose run --rm -e MIX_ENV=test -e DATABASE_URL=ecto://postgres:postgres@db/kantine_koning_test web mix test --cover
+  ```
+- Use tags for specific tests (e.g., `mix test --only unit`).
+
+---
+
+## 3. Performance vs. Reliability
+
+- **Priority:** Reliability > Speed.
+- **Acceptable Metrics:**
+  - ~250-300ms per test is reasonable.
+  - Aim for a ratio of ~60% async to ~40% sync tests.
+  - Keep PubSub tests synchronous for reliability.
+- **Optimization Guidelines:**
+  - Use `setup_all` only when necessary.
+  - Avoid sharing state between tests.
+  - Keep database operations isolated.
+  - Accept slower tests for critical features.
+  - Monitor test execution times in CI.
+- **When to Optimize:**
+  - If the entire test suite exceeds 1 minute.
+  - When individual tests exceed 500ms.
+  - If clear bottlenecks are identified without compromising reliability.
+
+---
+
+## 4. Async Testing
+
+- **When to Use Async:**
+  - For unit tests that don't share resources.
+  - For context tests with PostgreSQL (using sandbox mode).
+  - For tests without global state or timing-sensitive operations.
+  - **Example:**
+    ```elixir
+    use CursorDemo.DataCase, async: true  # For context tests
+    use CursorDemoWeb.ConnCase, async: true  # For controller tests
+    ```
+- **When to Keep Sync:**
+  - For tests sharing global resources.
+  - For PubSub subscription tests.
+  - For tests with timing dependencies or that modify application state.
+  - For tests that require specific ordering.
+
+- **Precautions:**
+  - Ensure proper sandbox setup (e.g., in `test/support/data_case.ex`).
+  - Be cautious with shared resources (PubSub, ETS tables).
+  - Monitor for race conditions in async tests.
+  - Prioritize test isolation over raw performance.
+
+- **Performance Impact:**
+  - Async tests can run 2-3x faster on multi-core systems.
+  - Benefits increase with the size of the test suite.
+  - Monitor memory usage with large numbers of async tests.
+
+---
+
+## 5. Test Types & Best Practices
+
+- **Unit Tests:** Isolated, fast, and async when possible.
+- **Integration Tests:** Validate complete flows and database interactions.
+- **Feature/Live Tests:** End-to-end user scenarios and real-time UI updates.
+- **PubSub Tests:** Verify broadcast and subscription mechanisms.
+- Use descriptive names, group tests logically, and maintain readability.
+
+---
+
+**Note:**  
+Always follow project-specific testing strategies over generic ones when conflicts arise.

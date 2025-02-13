@@ -1,0 +1,1 @@
+In the tailwind components i dont see textarea element borders, can you make sure we don't have any unwanted focus or border on the element? 

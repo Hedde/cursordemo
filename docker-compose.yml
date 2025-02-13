@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  web:
+    build: .
+    # We'll mount our local folder into /app so we can edit code on the host,
+    # yet run everything inside the container.
+    volumes:
+      - .:/app
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    environment:
+      - MIX_ENV=dev
+      # Tells Ecto how to connect to our 'db' container
+      - DATABASE_URL=ecto://postgres:postgres@db:5432/kantine_koning_dev
+    # Command will be overridden for first-time generation,
+    # but normally we run phoenix:
+    command: ["mix", "phx.server"]
+
+volumes:
+  db_data:

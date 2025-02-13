@@ -1,0 +1,1 @@
+In de 'wie te volgen' sectie is de volg knop bij de dummy data overlappend over de user handle, kun je die uitlijning verbeteren? 

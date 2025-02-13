@@ -1,0 +1,34 @@
+---
+description: 
+globs: 
+---
+@rule
+Title: Language & Frameworks Guidelines
+Priority: Medium
+Tags: [language, frameworks, elixir, phoenix, liveview, tailwind, guidelines]
+
+---
+
+## 1. Best Practices
+
+- Follow the ofst practices for Elixir, Phoenix, LiveView, and Tailwind CSS.
+- Verify dependency versions in `mix.exs` and consult official documentation when needed.
+
+---
+
+## 2. Documentation & Code Understanding
+
+- Add clear and detailed docstrings to complex business logic.
+- Review existing documentation before modifying code to ensure continuity and clarity.
+
+---
+
+## 3. Coding Style & Structure
+
+- Write concise, idiomatic Elixir that leverages pattern matching, recursion, and functional programming principles.
+- Organize files according to Phoenix conventions (e.g., controllers, contexts, views).
+
+---
+
+**Note:**  
+Project-specific rules override generic rules when conflicts occur.

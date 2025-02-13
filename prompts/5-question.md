@@ -1,0 +1,3 @@
+@.cursorrules @app.html.heex @router.ex based on our twitter like dummy layout, lets start working on a data model so we create the correct database entities and changesets to later get all the UI components working. Let's refine on what we need, my first sketch would include the following entities, which might or might not be represented by the database;
+
+Users (email, password, username, image, perhaps a profile?), Posts (a message of 280 chars max?), Likes, Follows and intermediate models.. Perhaps you can questionaire me before implementing. Users will need login, logout and edit profile options. I would like to stick with the server side for now, and implement the required live view (components) later. 

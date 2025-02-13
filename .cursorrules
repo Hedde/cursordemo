@@ -1,0 +1,1 @@
+Always ensure that the rules defined in the .cursor/rules directory (e.g., for architecture, testing, language, and workflow) are consulted and, in case of conflicts, these rules override any global settings.

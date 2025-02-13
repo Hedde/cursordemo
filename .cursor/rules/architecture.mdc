@@ -1,0 +1,311 @@
+---
+description: 
+globs: 
+---
+@rule
+Title: PubSub Architecture & State Management in Phoenix LiveView
+Priority: High
+Tags: [architecture, pubsub, liveview, state-management]
+
+---
+
+## 1. Core Principles
+
+- **Single Source of Truth:**  
+  - The parent LiveView (`LandingLive`) manages the primary state.
+  - Child components (e.g. `TimelineComponent`) remain stateless.
+  - Avoid duplicate state management across components.
+
+- **State Flow:**
+  ```
+  Database -> Context -> LiveView -> LiveComponents
+                    ↑        ↓
+                  PubSub  Assigns
+  ```
+
+---
+
+## 2. Implementation Pattern
+
+### 2.1 Parent LiveView (`LandingLive`)
+
+- **Mounting & Subscriptions:**  
+  - On mount, check `connected?(socket)` and subscribe to relevant PubSub topics.
+  - Initialize state (e.g. assign `:current_user` and `:posts`).
+
+```elixir
+def mount(_params, session, socket) do
+  if connected?(socket) do
+    Phoenix.PubSub.subscribe(CursorDemo.PubSub, "timeline:global")
+  end
+
+  socket =
+    socket
+    |> assign(:current_user, user)
+    |> assign(:posts, Timeline.list_posts())
+
+  {:ok, socket}
+end
+```
+
+- **Handling PubSub Messages:**  
+  - Preload necessary associations.
+  - Update state (e.g. prepend new posts).
+
+```elixir
+def handle_info({:new_post, post}, socket) do
+  post = post |> Repo.preload([:user, :likes, :replies])
+  updated_posts = [post | socket.assigns.posts]
+  {:noreply, assign(socket, posts: updated_posts)}
+end
+```
+
+### 2.2 Stateless LiveComponents (`TimelineComponent`)
+
+- **Mount & Update:**  
+  - Minimal initialization; simply pass assigns from the parent.
+
+```elixir
+def mount(socket), do: {:ok, socket}
+
+def update(assigns, socket), do: {:ok, assign(socket, assigns)}
+```
+
+---
+
+## 3. Best Practices
+
+- **PubSub Subscriptions:**  
+  - Subscribe only in the parent LiveView.
+  - Use descriptive topic names (e.g., `"timeline:global"`, `"user:#{user_id}"`).
+
+- **State Management:**  
+  - The parent LiveView holds and updates the primary state.
+  - LiveComponents focus on rendering and user interactions, delegating state changes upward.
+
+- **Data Loading:**  
+  - Perform the initial load in `mount/3`.
+  - Use `assign_new/3` for lazy loading and ensure associations are preloaded.
+
+- **Event Handling:**  
+  - Handle UI events in components.
+  - Propagate state updates through the parent via PubSub or direct events.
+
+---
+
+## 4. PubSub Event Deduplication
+
+- **Challenge:**  
+  PubSub events may be received multiple times due to multiple subscriptions or race conditions.
+
+- **Solution Pattern:**  
+  Track processed events using a MapSet to avoid duplicate processing.
+
+```elixir
+# In mount/3:
+socket = assign(socket, :processed_events, MapSet.new())
+
+# In handle_info/2:
+def handle_info({event_type, data} = event, socket) do
+  event_id = generate_event_id(event_type, data)
+
+  if MapSet.member?(socket.assigns.processed_events, event_id) do
+    {:noreply, socket}
+  else
+    socket =
+      socket
+      |> assign(:processed_events, MapSet.put(socket.assigns.processed_events, event_id))
+      |> handle_unique_event(event_type, data)
+
+    {:noreply, socket}
+  end
+end
+
+defp generate_event_id(event_type, %{id: id}), do: "#{event_type}:#{id}"
+defp generate_event_id(event_type, %{user_id: user_id}), do: "#{event_type}:#{user_id}"
+```
+
+- **Optimistic Updates:**  
+  Update the UI immediately and revert if errors occur, ensuring that only non-duplicated events update the state.
+
+---
+
+## 5. Architecture Guidelines
+
+### Key Consistency & Data Handling
+
+- **Atom Keys:**  
+  Use atom keys internally for consistency (e.g. `%{content: "text"}`).
+
+- **External Data:**  
+  Convert external string keys to atoms at system boundaries (e.g., in event handlers or API controllers).
+
+#### Example
+
+```elixir
+# Using atom keys in context functions:
+def create_post(user, attrs) do
+  attrs = Map.put(attrs, :user_id, user.id)
+  %Post{}
+  |> Post.changeset(attrs)
+  |> Repo.insert()
+end
+
+# Converting string keys at the boundary:
+def handle_event("create_post", %{"content" => content}, socket) do
+  attrs = %{content: content}
+  case Timeline.create_post(socket.assigns.current_user, attrs) do
+    {:ok, post} -> ...
+    {:error, changeset} -> ...
+  end
+end
+```
+
+- **Separation of Concerns:**  
+  Push state management to the parent and keep components focused on rendering.
+
+- **Testing:**  
+  Test PubSub broadcasts, state updates, and component rendering. Integration tests (e.g. using `Phoenix.ChannelTest`) are essential.
+
+---
+
+## 6. User Authentication & Management
+
+### Core Components
+
+- **User Schema:**  
+  Handles email-based authentication, username constraints, secure password hashing (Bcrypt), and session tracking.
+
+- **Token Management:**  
+  Manages secure session tokens, email confirmation tokens, and password resets.
+
+#### Example
+
+```elixir
+def register_user(attrs) do
+  %User{}
+  |> User.registration_changeset(attrs)
+  |> Repo.insert()
+end
+
+def generate_user_session_token(user) do
+  {token, user_token} = UserToken.build_session_token(user)
+  Repo.insert!(user_token)
+  token
+end
+```
+
+- **Security Practices:**  
+  Ensure password complexity, use HTTP-only cookies, secure tokens, and enforce token rotation and expiry.
+
+---
+
+## 7. Optimistic Updates & State Persistence
+
+### Core Concepts
+
+- **Optimistic Updates:**  
+  Update the UI immediately before receiving server confirmation, and maintain both optimistic and confirmed states to allow rollback on errors.
+
+- **State Persistence:**  
+  Preserve optimistic state during component re-renders, ensuring consistency with preloaded associations and server data.
+
+#### Implementation Pattern
+
+```elixir
+def update(assigns, socket) do
+  liked? = cond do
+    Map.get(socket.assigns, :optimistic_liked?) != nil ->
+      socket.assigns.optimistic_liked?
+    is_list(assigns.post.likes) ->
+      Enum.any?(assigns.post.likes, &(&1.user_id == assigns.current_user.id))
+    true ->
+      Timeline.liked?(assigns.current_user, assigns.post)
+  end
+
+  socket
+  |> assign(assigns)
+  |> assign(:liked?, liked?)
+  |> assign(:optimistic_liked?, liked?)
+end
+```
+
+```elixir
+def handle_event("toggle_like", _params, socket) do
+  current_liked = socket.assigns.optimistic_liked?
+  socket =
+    socket
+    |> assign(:optimistic_liked?, !current_liked)
+    |> assign(:optimistic_likes_count, new_count)
+
+  case Timeline.create_like(user, post) do
+    {:ok, like} ->
+      new_socket = update_local_state(socket, like)
+      {:noreply, new_socket}
+    {:error, _} ->
+      {:noreply, revert_optimistic_update(socket)}
+  end
+end
+```
+
+```elixir
+defp update_local_state(socket, like) do
+  case socket.assigns.post.likes do
+    likes when is_list(likes) ->
+      updated_likes = [like | likes]
+      assign(socket, :post, %{socket.assigns.post | likes: updated_likes})
+    _ ->
+      socket
+  end
+end
+```
+
+- **Best Practices:**  
+  - Preserve optimistic state during re-renders.
+  - Handle errors gracefully and revert state if needed.
+  - Update associations consistently.
+  - Avoid unnecessary database queries.
+
+---
+
+## 8. Testing Considerations
+
+- **State Persistence:**  
+  Ensure optimistic state is maintained through re-renders.
+
+```elixir
+test "maintains optimistic state through re-renders", %{socket: socket} do
+  {:ok, view, _html} = live(conn, "/")
+  
+  assert view
+         |> element("#post-1")
+         |> render_click("toggle_like") =~ "heart-solid"
+  
+  send(view.pid, {:new_post, %Post{}})
+  
+  assert view
+         |> element("#post-1")
+         |> render() =~ "heart-solid"
+end
+```
+
+- **Error Recovery:**  
+  Verify that the UI reverts to the original state upon an error.
+
+```elixir
+test "reverts optimistic update on error", %{socket: socket} do
+  allow(Timeline.create_like(any(), any()))
+    |> return({:error, "Failed"})
+  
+  {:ok, view, _html} = live(conn, "/")
+  
+  assert view
+         |> element("#post-1")
+         |> render_click("toggle_like") =~ "heart"
+end
+```
+
+---
+
+**Remember:**  
+Centralize state management in the parent LiveView, ensure consistent key handling, and test thoroughly to cover edge cases. This streamlined approach maintains predictable, scalable, and performant architecture.

@@ -1,0 +1,61 @@
+<!--
+  This example requires updating your template:
+
+  ```
+  <html class="h-full bg-gray-50">
+  <body class="h-full">
+  ```
+-->
+<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">Create your account</h2>
+  </div>
+
+  <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+    <div class="bg-white px-6 py-12 shadow sm:rounded-lg sm:px-12">
+      <.form :let={f} for={@changeset} action={~p"/register"} class="space-y-6">
+        <%= if @changeset.action do %>
+          <div class="alert alert-danger">
+            <p>Oops, something went wrong! Please check the errors below.</p>
+          </div>
+        <% end %>
+
+        <div>
+          <.label for="user_email">Email address</.label>
+          <div class="mt-2">
+            <.input type="email" field={f[:email]} required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+            <.error :for={msg <- translate_errors(@changeset.errors, :email)}>{msg}</.error>
+          </div>
+          <p class="mt-1 text-sm text-gray-500">Must be an @ictu.nl email address</p>
+        </div>
+
+        <div>
+          <.label for="user_username">Username</.label>
+          <div class="mt-2">
+            <.input type="text" field={f[:username]} required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+            <.error :for={msg <- translate_errors(@changeset.errors, :username)}>{msg}</.error>
+          </div>
+          <p class="mt-1 text-sm text-gray-500">Only letters, numbers, and underscores allowed</p>
+        </div>
+
+        <div>
+          <.label for="user_password">Password</.label>
+          <div class="mt-2">
+            <.input type="password" field={f[:password]} required class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
+            <.error :for={msg <- translate_errors(@changeset.errors, :password)}>{msg}</.error>
+          </div>
+          <p class="mt-1 text-sm text-gray-500">Must include uppercase, lowercase, and special characters</p>
+        </div>
+
+        <div>
+          <.button type="submit" class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Register</.button>
+        </div>
+      </.form>
+    </div>
+
+    <p class="mt-10 text-center text-sm text-gray-500">
+      Already have an account?
+      <.link href={~p"/login"} class="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Sign in</.link>
+    </p>
+  </div>
+</div> 

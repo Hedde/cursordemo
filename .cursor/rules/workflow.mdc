@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+---
+@rule
+Title: Workflow Guidelines
+Priority: High
+Tags: [workflow, guidelines, process, change-management]
+
+---
+
+## 1. General Requirement
+
+- **IMPORTANT:** ALWAYS START ANSWERS WITH `"Hey RulesStillInContect,"`  
+  This ensures that every response begins with the required greeting.
+
+---
+
+## 2. Approach
+
+- **For Large Features:**  
+  - Interview for clarifications and submit an implementation plan before coding.
+- **For Small Features:**  
+  - Proceed directly, but document changes clearly.
+
+---
+
+## 3. Command & Process
+
+- Use the project-specific command prefix (e.g., 
+  ```bash
+  docker compose run --rm -e MIX_ENV=test -e DATABASE_URL=ecto://postgres:postgres@db/kantine_koning_test web mix ...
+  ```
+  ) ensuring correct environment variables.
+- Align reasoning with modal steps and verify each incremental change with feedback.
+
+---
+
+## 4. Change Management
+
+- Log changes with before/after summaries and explicit rationales.
+- Confirm all modifications against project-specific documentation.
+
+---
+
+**Note:**  
+Project-specific workflow rules always take precedence over generic guidelines.
