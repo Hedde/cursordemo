@@ -1,14 +1,12 @@
 app = "cursor-demo"
-primary_region = "ams" # Amsterdam, change this to your preferred region
+primary_region = "ams"
 
 [build]
-  [build.args]
-    BUILD_WITH_DEV=false
+  dockerfile = "Dockerfile"
 
 [env]
   PHX_HOST = "cursor-demo.fly.dev"
   PORT = "8080"
-  DATABASE_PATH = "/data/cursor_demo.db"
 
 [http_service]
   internal_port = 8080
@@ -16,7 +14,6 @@ primary_region = "ams" # Amsterdam, change this to your preferred region
   auto_stop_machines = true
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
 
   [http_service.concurrency]
     type = "connections"
@@ -26,8 +23,4 @@ primary_region = "ams" # Amsterdam, change this to your preferred region
 [[vm]]
   cpu_kind = "shared"
   cpus = 1
-  memory_mb = 1024
-
-[mounts]
-  source="cursor_demo_data"
-  destination="/data" 
+  memory_mb = 1024 
