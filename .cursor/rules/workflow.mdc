@@ -29,7 +29,7 @@ Tags: [workflow, guidelines, process, change-management]
 
 - Use the project-specific command prefix (e.g., 
   ```bash
-  docker compose run --rm -e MIX_ENV=test -e DATABASE_URL=ecto://postgres:postgres@db/kantine_koning_test web mix ...
+  docker compose run --rm -e MIX_ENV=test -e DATABASE_URL=ecto://postgres:postgres@db/cursor_demo_test web mix ...
   ```
   ) ensuring correct environment variables.
 - Align reasoning with modal steps and verify each incremental change with feedback.

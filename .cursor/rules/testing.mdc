@@ -12,8 +12,8 @@ Tags: [testing, guidelines, structure, performance, async]
 ## 1. Structure & Organization
 
 - **Folder Layout:**
-  - `test/kantine_koning/`: Business logic tests (unit, integration, PubSub).
-  - `test/kantine_koning_web/`: Web tests (features, live).
+  - `test/cursor_demo/`: Business logic tests (unit, integration, PubSub).
+  - `test/cursor_demo_web/`: Web tests (features, live).
   - `support/`: Test support files.
 - Map tests to implementation folders for easier traceability.
 
@@ -23,7 +23,7 @@ Tags: [testing, guidelines, structure, performance, async]
 
 - **Full Suite Command:**
   ```bash
-  docker compose run --rm -e MIX_ENV=test -e DATABASE_URL=ecto://postgres:postgres@db/kantine_koning_test web mix test --cover
+  docker compose run --rm -e MIX_ENV=test -e DATABASE_URL=ecto://postgres:postgres@db/cursor_demo_test web mix test --cover
   ```
 - Use tags for specific tests (e.g., `mix test --only unit`).
 
