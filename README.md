@@ -84,4 +84,4 @@ Kijk voor meer specialisatie van de te draaien testen in de TEST.md
    Controleer of er geen andere processen op poort 4000 draaien. Stop anders eerdere containers of pas de poort aan in de `docker-compose.yml`.
 
 2. **Hoe pas ik de databaseconfiguratie aan?**
-   Kijk in `config/dev.exs`, `config/test.exs` of `config/prod.exs`. De Docker Compose-configuratie gebruikt standaard `db` als host en `ecto://postgres:postgres@db/kantine_koning_[env]` als connection string.
+   Kijk in `config/dev.exs`, `config/test.exs` of `config/prod.exs`. De Docker Compose-configuratie gebruikt standaard `db` als host en `ecto://postgres:postgres@db/cursor_demo_[env]` als connection string.

@@ -22,7 +22,7 @@ services:
     environment:
       - MIX_ENV=dev
       # Tells Ecto how to connect to our 'db' container
-      - DATABASE_URL=ecto://postgres:postgres@db:5432/kantine_koning_dev
+      - DATABASE_URL=ecto://postgres:postgres@db:5432/cursor_demo_dev
     # Command will be overridden for first-time generation,
     # but normally we run phoenix:
     command: ["mix", "phx.server"]
